@@ -1,16 +1,28 @@
 "map function to a key sequence in visual mode
-vmap ,t y :call Test()<CR>
+inoremap <F5> <C-R>=ShowRegContents()<CR>
+vmap ,p x:call TextTuner()<CR>i<F5>
 
-function! Test()
+function! TextTuner()
+let fname = 'AI21_API_KEY.txt'
+for line in readfile(fname, '', 10)
+  let key = line
+endfor
+
 python3 << EOF
 import vim
 import ai21
-
-text = vim.eval('@0')
-ai21.api_key = ''
+    
+text = vim.eval('@-')
+ai21.api_key  = vim.eval('key')
 response = ai21.Paraphrase.execute(text=text)
 paraphrased_texts = [suggestion['text'] for suggestion in response['suggestions']] 
-for paraphrased_text in paraphrased_texts:
-    print(paraphrased_text)
+for i, paraphrased_text in enumerate(paraphrased_texts):
+    vim.command(f'let @{i} = "{paraphrased_text}"')
 EOF
 endfunction
+
+func! ShowRegContents()
+  call complete(col('.'), [@0, @1, @2, @3, @4, @5, @6, @7, @8, @9, @-])
+  return ''
+endfunc
+
